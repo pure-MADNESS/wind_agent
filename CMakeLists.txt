@@ -53,7 +53,13 @@ FetchContent_Declare(json
   GIT_SHALLOW    TRUE
 )
 
-FetchContent_MakeAvailable(pugg json)
+FetchContent_Declare(negotiator
+  GIT_REPOSITORY https://github.com/pure-MADNESS/negotiator-lib.git
+  GIT_TAG        main
+  GIT_SHALLOW    TRUE
+)
+
+FetchContent_MakeAvailable(pugg json negotiator)
 
 FetchContent_Populate(plugin 
   GIT_REPOSITORY https://github.com/pbosetti/mads_plugin.git
@@ -63,6 +69,8 @@ FetchContent_Populate(plugin
   SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/_deps/plugin-src
   BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/_deps/plugin-build
 )
+
+
 
 include_directories(${plugin_SOURCE_DIR}/src)
 
@@ -110,7 +118,7 @@ endif()
 include_directories(${json_SOURCE_DIR}/include)
 
 # These plugins are always build and use for testing
-add_plugin(wind_agent)
+add_plugin(wind_agent LIBS negotiator)
 
 
 # INSTALL ######################################################################
