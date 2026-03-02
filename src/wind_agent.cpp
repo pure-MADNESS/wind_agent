@@ -16,6 +16,7 @@
 #include <filter.hpp>
 #include <nlohmann/json.hpp>
 #include <pugg/Kernel.h>
+#include "negotiator.hpp"
 
 // other includes as needed here
 
@@ -35,6 +36,13 @@ class Wind_agentPlugin : public Filter<json, json> {
 
 public:
 
+  Wind_agentPlugin() : 
+    _input_power(0.0), 
+    _output_power(0.0), 
+    _covariance(0.01),
+    _negotiator(_covariance, _input_power)
+  {  }
+
   // Typically, no need to change this
   string kind() override { return PLUGIN_NAME; }
 
@@ -46,6 +54,9 @@ public:
   // return_type::error: _error is traced, skip process
   // return_type::critical: execution stops
   return_type load_data(json const &input, string topic = "") override {
+
+    _negotiator.listen(input, topic);
+
     // Do something with the input data
     return return_type::success;
   }
@@ -61,7 +72,11 @@ public:
   return_type process(json &out) override {
     out.clear();
 
-    // load the data as necessary and set the fields of the json out variable
+    _negotiator.update_proposal();
+
+    if(!_negotiator.get_stab_flag()){
+      out = _negotiator.speak();
+    }
 
     // This sets the agent_id field in the output json object, only when it is
     // not empty
@@ -96,6 +111,11 @@ public:
 
 private:
   // Define the fields that are used to store internal resources
+  
+  double _input_power = 0.0;
+  double _output_power = 0.0;
+  double _covariance = 0.01;
+  Negotiator _negotiator;
   
 };
 
