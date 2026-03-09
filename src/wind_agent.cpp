@@ -73,10 +73,7 @@ public:
     out.clear();
 
     _negotiator.update_proposal();
-
-    if(!_negotiator.get_stab_flag()){
-      out = _negotiator.speak();
-    }
+    out = _negotiator.speak();
 
     // This sets the agent_id field in the output json object, only when it is
     // not empty

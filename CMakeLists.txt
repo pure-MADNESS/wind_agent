@@ -59,7 +59,13 @@ FetchContent_Declare(negotiator
   GIT_SHALLOW    TRUE
 )
 
-FetchContent_MakeAvailable(pugg json negotiator)
+FetchContent_Declare(ekf
+  GIT_REPOSITORY https://github.com/pure-MADNESS/ekf-lib.git
+  GIT_TAG        main
+  GIT_SHALLOW    TRUE
+)
+
+FetchContent_MakeAvailable(pugg json negotiator ekf)
 
 FetchContent_Populate(plugin 
   GIT_REPOSITORY https://github.com/pbosetti/mads_plugin.git
@@ -116,7 +122,7 @@ endif()
 include_directories(${json_SOURCE_DIR}/include)
 
 # These plugins are always build and use for testing
-add_plugin(wind_agent LIBS negotiator)
+add_plugin(wind_agent LIBS negotiator ekf)
 
 
 # INSTALL ######################################################################
