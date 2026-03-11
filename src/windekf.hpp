@@ -1,45 +1,55 @@
+/*
+
+ __        ___           _   _____ _  _______    ____ _               
+ \ \      / (_)_ __   __| | | ____| |/ /  ___|  / ___| | __ _ ___ ___ 
+  \ \ /\ / /| | '_ \ / _` | |  _| | ' /| |_    | |   | |/ _` / __/ __|
+   \ V  V / | | | | | (_| | | |___| . \|  _|   | |___| | (_| \__ \__ \
+    \_/\_/  |_|_| |_|\__,_| |_____|_|\_\_|      \____|_|\__,_|___/___/
+                                                                      
+
+*/
+
 #ifndef __WIND_EKF_H__
 #define __WIND_EKF_H__
 
 #include "ekf.hpp"
+#include <cmath>
+#include <algorithm>
 
-class WindEKF : public EKF{
+using namespace Eigen;
+using namespace std;
 
-  public:
+class WindEKF : public EKF {
 
-    WindEKF() : EKF(2, 2) {
-        Q << 0.001, 0, 0, 0.001; 
-        R << 0.01, 0, 0, 0.1;
-    }
+    public:
 
-    Eigen::VectorXd f(const Eigen::VectorXd& x_old, double dt) override {
-        Eigen::VectorXd x_new(2);
-        x_new(0) = x_old(0) + x_old(1) * dt; // theta = theta + omega*dt
-        x_new(1) = x_old(1);                // omega costante (modello random walk)
-        return x_new;
-    }
+        /**
+         * @brief State: [omega, P_max]^T
+         *        Measurement: [omega_alternatore]^T
+         */
+        WindEKF(double J, double kt, int pairs);
 
-    Eigen::MatrixXd F(const Eigen::VectorXd& x, double dt) override {
-        Eigen::MatrixXd F_j(2, 2);
-        F_j << 1, dt,
-               0, 1;
-        return F_j;
-    }
+        void set_inputs(double v_wind_api, double p_now);
 
-    Eigen::VectorXd h(const Eigen::VectorXd& x_pred) override {
-        Eigen::VectorXd z_pred(2);
-        z_pred(0) = x_pred(0); // encoder -> theta
-        z_pred(1) = x_pred(1); // gyro -> omega
-        return z_pred;
-    }
-
-    // Jacobiana del modello di misura
-    Eigen::MatrixXd H(const Eigen::VectorXd& x) override {
-        return Eigen::MatrixXd::Identity(2, 2);
-    }
-
-}; 
+        /**         
+         * Prediction:                  
+         * J * dw/dt = Tau_wind - Tau_load                      
+         */
+        Eigen::VectorXd f(const Eigen::VectorXd& x, double dt) override;
 
 
+        Eigen::MatrixXd F(const Eigen::VectorXd& x, double dt) override;
+
+        Eigen::VectorXd h(const Eigen::VectorXd& x_pred) override;
+
+        Eigen::MatrixXd H(const Eigen::VectorXd& x) override;
+
+    private:
+        double _J;          // [kg*m^2]
+        double _kt;         // fixed
+        double _p_pairs;
+        double _v_wind;     // [m/s]
+        double _p_actual;   // [W]
+};
 
 #endif

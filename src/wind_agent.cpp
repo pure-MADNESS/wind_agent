@@ -16,9 +16,10 @@
 #include <filter.hpp>
 #include <nlohmann/json.hpp>
 #include <pugg/Kernel.h>
-#include "negotiator.hpp"
 
 // other includes as needed here
+#include "negotiator.hpp"
+#include "windekf.hpp"
 
 // Define the name of the plugin
 #ifndef PLUGIN_NAME

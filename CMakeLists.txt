@@ -53,6 +53,12 @@ FetchContent_Declare(json
   GIT_SHALLOW    TRUE
 )
 
+FetchContent_Declare(httplib
+  GIT_REPOSITORY https://github.com/yhirose/cpp-httplib.git
+  GIT_TAG        master  # Sempre latest
+  GIT_SHALLOW    TRUE
+)
+
 FetchContent_Declare(negotiator
   GIT_REPOSITORY https://github.com/pure-MADNESS/negotiator-lib.git
   GIT_TAG        main
@@ -65,7 +71,13 @@ FetchContent_Declare(ekf
   GIT_SHALLOW    TRUE
 )
 
-FetchContent_MakeAvailable(pugg json negotiator ekf)
+FetchContent_Declare(forecast
+  GIT_REPOSITORY https://github.com/pure-MADNESS/forecast-lib.git
+  GIT_TAG        main
+  GIT_SHALLOW    TRUE
+)
+
+FetchContent_MakeAvailable(pugg json httplib negotiator ekf)
 
 FetchContent_Populate(plugin 
   GIT_REPOSITORY https://github.com/pbosetti/mads_plugin.git
@@ -75,6 +87,8 @@ FetchContent_Populate(plugin
   SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/_deps/plugin-src
   BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/_deps/plugin-build
 )
+
+find_package(Eigen3 REQUIRED)
 
 include_directories(${plugin_SOURCE_DIR}/src)
 
@@ -122,7 +136,7 @@ endif()
 include_directories(${json_SOURCE_DIR}/include)
 
 # These plugins are always build and use for testing
-add_plugin(wind_agent LIBS negotiator ekf)
+add_plugin(wind_agent LIBS Eigen3::Eigen negotiator ekf SRCS ${SRC_DIR}/windekf.cpp)
 
 
 # INSTALL ######################################################################
