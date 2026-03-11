@@ -77,7 +77,7 @@ FetchContent_Declare(forecast
   GIT_SHALLOW    TRUE
 )
 
-FetchContent_MakeAvailable(pugg json httplib negotiator ekf)
+FetchContent_MakeAvailable(pugg json httplib negotiator ekf forecast)
 
 FetchContent_Populate(plugin 
   GIT_REPOSITORY https://github.com/pbosetti/mads_plugin.git
@@ -136,7 +136,7 @@ endif()
 include_directories(${json_SOURCE_DIR}/include)
 
 # These plugins are always build and use for testing
-add_plugin(wind_agent LIBS Eigen3::Eigen negotiator ekf SRCS ${SRC_DIR}/windekf.cpp)
+add_plugin(wind_agent LIBS Eigen3::Eigen negotiator ekf forecast SRCS ${SRC_DIR}/windekf.cpp)
 
 
 # INSTALL ######################################################################

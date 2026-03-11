@@ -20,6 +20,7 @@
 // other includes as needed here
 #include "negotiator.hpp"
 #include "windekf.hpp"
+#include "forecast.hpp"
 
 // Define the name of the plugin
 #ifndef PLUGIN_NAME
