@@ -21,11 +21,15 @@
 #include "negotiator.hpp"
 #include "windekf.hpp"
 #include "forecast.hpp"
+#include <chrono>
+#include <iostream>
 
 // Define the name of the plugin
 #ifndef PLUGIN_NAME
 #define PLUGIN_NAME "wind_agent"
 #endif
+
+#define PERIOD 0.001
 
 // Load the namespaces
 using namespace std;
@@ -42,7 +46,8 @@ public:
     _input_power(0.0), 
     _output_power(0.0), 
     _covariance(0.01),
-    _negotiator(_covariance, _input_power)
+    _negotiator(_covariance, _input_power),
+    _ekf(100, 10, 100)
   {  }
 
   // Typically, no need to change this
@@ -74,7 +79,26 @@ public:
   return_type process(json &out) override {
     out.clear();
 
+    _weather = fetchWeather(46.0691, 11.1212, 1);
+    auto now_time_t = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+
+    tm* local_tm = std::localtime(&now_time_t);
+    int current_hour = local_tm->tm_hour;
+
+    double v_wind_api = _weather.wind_speed_10m[current_hour];
+
+    _ekf.set_inputs(v_wind_api, _output_power);
+    _ekf.predict(PERIOD);
+    
+    // if measurement, then update
+
+    _input_power = _ekf.get_state()(1);
+
     _negotiator.update_proposal();
+    if(_negotiator.get_stab_flag()){
+
+      _output_power = _negotiator.get_proposed_power();
+    }
     out = _negotiator.speak();
 
     // This sets the agent_id field in the output json object, only when it is
@@ -115,6 +139,8 @@ private:
   double _output_power = 0.0;
   double _covariance = 0.01;
   Negotiator _negotiator;
+  WindEKF _ekf;
+  WeatherData _weather;
   
 };
 
