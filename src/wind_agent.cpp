@@ -108,7 +108,7 @@ public:
 
     _omega = _ekf.get_state()(0);
     _input_power = _ekf.get_state()(1);
-    _covariance = _ekf.get_covariance();
+    _covariance = _ekf.get_covariance()(1, 1);
 
     _negotiator.set_cov(_covariance);
     _negotiator.set_pmax(_input_power);
