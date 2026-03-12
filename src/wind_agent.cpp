@@ -96,7 +96,7 @@ public:
       counter++;
       _ekf.predict(20);
 
-    } else if(counter == 200){
+    } else if(counter >= 200){
 
       counter = 0;
     }

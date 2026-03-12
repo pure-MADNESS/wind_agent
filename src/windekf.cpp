@@ -14,6 +14,9 @@
 WindEKF::WindEKF(double J, double kt, int pairs) 
     : EKF(2, 1), _J(J), _kt(kt), _p_pairs(static_cast<double>(pairs)){
 
+    Q.resize(2, 2);
+    R.resize(1, 1);
+
     Q << 0.01, 0, 
             0, 1.0; 
 
