@@ -65,24 +65,17 @@ public:
   // return_type::critical: execution stops
   return_type load_data(json const &input, string topic = "", vector<unsigned char> const *blob = nullptr) override {
     // Do something with the input data
-
-    cout << "> start load data " << endl;
     
     if(topic == "forecast"){
-
 
       auto now_time_t = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
       tm* local_tm = std::localtime(&now_time_t);
       int current_hour = local_tm->tm_hour;
 
       _wind = input.at("wind").at(current_hour).get<double>() * 3.6;  
-      cout << _wind << endl;    
     }
 
-    cout << "listen negotiator" << endl;
     _negotiator.listen(input, topic);
-
-    cout << "> end load data " << endl;
     
     return return_type::success;
   }
@@ -127,6 +120,12 @@ public:
 
       _output_power = _negotiator.get_proposed_power();
       cout << _output_power << endl;
+
+      cout << "\rErogating [" << _output_power << "W] while generating [" << _input_power << "W] \033[K" << endl;
+    
+    } else{
+
+      cout << "\rNegotiation in progess  \033[K" << endl;
     }
     out = _negotiator.speak();
 
