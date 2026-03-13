@@ -36,6 +36,7 @@
 using namespace std;
 using json = nlohmann::json;
 using namespace Eigen;
+using namespace chrono;
 
 // Plugin class. This shall be the only part that needs to be modified,
 // implementing the actual functionality
@@ -64,8 +65,24 @@ public:
   // return_type::critical: execution stops
   return_type load_data(json const &input, string topic = "", vector<unsigned char> const *blob = nullptr) override {
     // Do something with the input data
+
+    cout << "> start load data " << endl;
     
+    if(topic == "forecast"){
+
+
+      auto now_time_t = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+      tm* local_tm = std::localtime(&now_time_t);
+      int current_hour = local_tm->tm_hour;
+
+      _wind = input.at("wind").at(current_hour).get<double>() * 3.6;  
+      cout << _wind << endl;    
+    }
+
+    cout << "listen negotiator" << endl;
     _negotiator.listen(input, topic);
+
+    cout << "> end load data " << endl;
     
     return return_type::success;
   }
@@ -81,34 +98,26 @@ public:
   return_type process(json &out, vector<unsigned char> *blob = nullptr) override {
     out.clear();
     
-    _weather = fetchWeather(46.0691, 11.1212, 1);
-    auto now_time_t = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    auto now = steady_clock::now();
+    duration<double> elapsed = now - _last_time;
+    _last_time = now;
+    _time_accumulator += elapsed.count();
 
-    tm* local_tm = std::localtime(&now_time_t);
-    int current_hour = local_tm->tm_hour;
+    while(_time_accumulator >= PERIOD){
 
-    double v_wind_api = _weather.wind_speed_10m[current_hour] * 3.6;
+      _ekf.set_inputs(_wind, _output_power);
+      _ekf.predict(PERIOD);
 
-    _ekf.set_inputs(v_wind_api, _output_power);
+      VectorXd z(1); 
+      z(0) = _omega + _dis(_gen);
 
-    if(counter < 200){
+      _ekf.update(z);
 
-      counter++;
-      _ekf.predict(20);
+      _input_power = _ekf.get_state()(1);
+      _covariance = _ekf.get_covariance()(1, 1);
 
-    } else if(counter >= 200){
-
-      counter = 0;
-    }
-
-    VectorXd z(1); 
-    z(0) = _omega + _dis(_gen);
-
-    _ekf.update(z);
-
-    _omega = _ekf.get_state()(0);
-    _input_power = _ekf.get_state()(1);
-    _covariance = _ekf.get_covariance()(1, 1);
+      _time_accumulator -= PERIOD;      
+    }   
 
     _negotiator.set_cov(_covariance);
     _negotiator.set_pmax(_input_power);
@@ -164,16 +173,17 @@ private:
   double _covariance = 0.01;
   Negotiator _negotiator;
   WindEKF _ekf;
+  double _wind = 0.0;
   WeatherData _weather;
+
+  steady_clock::time_point _last_time = steady_clock::now();
+  double _time_accumulator = 0.0;
 
   std::random_device _rd;
   std::mt19937 _gen;
   std::uniform_real_distribution<double> _dis;
   double _noise = 0.0;
   double _omega = 5.0;
-  
-
-  int counter = 0;
   
 };
 
