@@ -126,6 +126,7 @@ public:
     if(_negotiator.get_stab_flag()){
 
       _output_power = _negotiator.get_proposed_power();
+      cout << _output_power << endl;
     }
     out = _negotiator.speak();
 
@@ -143,7 +144,7 @@ public:
     Filter::set_params(params);
     
     _noise = _dis(_gen);
-    _negotiator.set_required_power(1000);
+    //_negotiator.set_required_power(10000);
 
     // provide sensible defaults for the parameters by setting e.g.
     _params["some_field"] = "default_value";
