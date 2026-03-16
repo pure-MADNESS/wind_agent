@@ -72,7 +72,10 @@ public:
       tm* local_tm = std::localtime(&now_time_t);
       int current_hour = local_tm->tm_hour;
 
-      _wind = input.at("wind").at(current_hour).get<double>() * 3.6;  
+      _wind = input.at("wind").at(current_hour).get<double>() * 3.6;
+      double next_wind = input.at("wind").at(++current_hour).get<double>() * 3.6;
+
+      _next_p_mean = (3.46 * pow(_wind, 3) + 3.46 * pow(next_wind, 3)) / 2; 
     }
 
     _negotiator.listen(input, topic);
@@ -98,13 +101,16 @@ public:
 
     while(_time_accumulator >= PERIOD){
 
+      _negotiator.set_weather_mean(_next_p_mean);
+
       _ekf.set_inputs(_wind, _output_power);
       _ekf.predict(PERIOD);
 
       VectorXd z(1); 
       z(0) = _omega + _dis(_gen);
 
-      _ekf.update(z);
+      double tot_erg_w = max(0.8, _negotiator.get_ergodic_penalty() * _negotiator.get_weather_penalty());
+      _ekf.update(z, _negotiator.get_ergodic_penalty());
 
       _input_power = _ekf.get_state()(1);
       _covariance = _ekf.get_covariance()(1, 1);
@@ -175,6 +181,8 @@ private:
   WindEKF _ekf;
   double _wind = 0.0;
   WeatherData _weather;
+
+  double _next_p_mean = 0.0;
 
   steady_clock::time_point _last_time = steady_clock::now();
   double _time_accumulator = 0.0;
