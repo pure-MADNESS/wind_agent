@@ -53,6 +53,7 @@ public:
     _gen(_rd()), _dis(-0.01, 0.01)
   {  }
 
+  
   // Typically, no need to change this
   string kind() override { return PLUGIN_NAME; }
 
@@ -76,7 +77,11 @@ public:
       double next_wind = input.at("wind").at(++current_hour).get<double>() * 3.6;
 
       _next_p_mean = (3.46 * pow(_wind, 3) + 3.46 * pow(next_wind, 3)) / 2; 
+
+      future_power(input);
     }
+
+    
 
     _negotiator.listen(input, topic);
     
@@ -181,9 +186,9 @@ private:
   WindEKF _ekf;
   double _wind = 0.0;
   WeatherData _weather;
-
+  vector <double> power_vector;
   double _next_p_mean = 0.0;
-
+  void future_power(const json& forecast_json);
   steady_clock::time_point _last_time = steady_clock::now();
   double _time_accumulator = 0.0;
 
@@ -194,6 +199,40 @@ private:
   double _omega = 5.0;
   
 };
+
+
+  void Wind_agentPlugin::future_power(const json& forecast_json){
+
+    power_vector.clear();
+
+    if(!forecast_json.contains("wind")){
+      cout << "No forecast data available" << endl;
+      return;
+    }
+
+    for(int i =0; i<24; ++i){
+
+      if(i>=static_cast<int>(forecast_json.at("wind").size())){
+        break;
+      }
+      double wind_kmh = forecast_json.at("wind").at(i).get<double>();
+      double wind_ms = wind_kmh * 3.6;
+      double power = 3.46 * pow(wind_ms, 3);
+      power_vector.push_back(power);
+    }
+
+  }
+      
+
+
+
+
+
+
+
+
+
+
 
 
 /*
