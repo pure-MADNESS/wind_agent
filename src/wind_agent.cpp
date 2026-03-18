@@ -216,9 +216,21 @@ private:
         break;
       }
       double wind_kmh = forecast_json.at("wind").at(i).get<double>();
-      double wind_ms = wind_kmh * 3.6;
-      double power = 3.46 * pow(wind_ms, 3);
+      double wind_ms = wind_kmh / 3.6;
+      double power ;
+
+     
+
+      if(wind_kmh> 5 && wind_kmh < 80){
+         power = 3.46 * pow(wind_ms, 3);
+      }
+
+      else{
+        power = 0.0;
+      }
+
       power_vector.push_back(power);
+
     }
 
   }
