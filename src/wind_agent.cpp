@@ -115,7 +115,7 @@ public:
       z(0) = _omega + _dis(_gen);
 
       double tot_erg_w = max(0.8, _negotiator.get_ergodic_penalty() * _negotiator.get_weather_penalty());
-      _ekf.update(z, _negotiator.get_ergodic_penalty());
+      _ekf.update(z, tot_erg_w);
 
       _input_power = _ekf.get_state()(1);
       _covariance = _ekf.get_covariance()(1, 1);
