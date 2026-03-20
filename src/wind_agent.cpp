@@ -139,6 +139,7 @@ public:
       cout << "\rNegotiation in progess  \033[K" << endl;
     }
     out = _negotiator.speak();
+    out["hourly"] = _power_vector;
 
     // load the data as necessary and set the fields of the json out variable
 
@@ -186,7 +187,7 @@ private:
   WindEKF _ekf;
   double _wind = 0.0;
   WeatherData _weather;
-  vector <double> power_vector;
+  vector <double> _power_vector;
   double _next_p_mean = 0.0;
   void future_power(const json& forecast_json);
   steady_clock::time_point _last_time = steady_clock::now();
@@ -203,7 +204,7 @@ private:
 
   void Wind_agentPlugin::future_power(const json& forecast_json){
 
-    power_vector.clear();
+    _power_vector.clear();
 
     if(!forecast_json.contains("wind")){
       cout << "No forecast data available" << endl;
@@ -229,7 +230,7 @@ private:
         power = 0.0;
       }
 
-      power_vector.push_back(power);
+      _power_vector.push_back(power);
 
     }
 
