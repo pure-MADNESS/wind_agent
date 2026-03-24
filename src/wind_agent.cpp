@@ -81,9 +81,12 @@ public:
       future_power(input);
     }
 
-    
-
     _negotiator.listen(input, topic);
+
+    if(topic == "data"){
+
+      _omega = input.at("data");
+    }
     
     return return_type::success;
   }
