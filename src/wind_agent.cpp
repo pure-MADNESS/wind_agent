@@ -44,6 +44,7 @@ class Wind_agentPlugin : public Filter<json, json> {
 
 public:
 
+/*
   Wind_agentPlugin() : 
     _input_power(0.0), 
     _output_power(0.0), 
@@ -51,7 +52,7 @@ public:
     _negotiator(_covariance, _input_power),
     _ekf(50, 3.46, 4),
     _gen(_rd()), _dis(-0.01, 0.01)
-  {  }
+  { cout << "constructòr" << endl; }*/
 
   
   // Typically, no need to change this
@@ -65,16 +66,22 @@ public:
   // return_type::error: _error is traced, skip process
   // return_type::critical: execution stops
   return_type load_data(json const &input, string topic = "", vector<unsigned char> const *blob = nullptr) override {
+    cout << __LINE__ << endl;
+
     // Do something with the input data
     
     if(topic == "forecast"){
 
       auto now_time_t = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
       tm* local_tm = std::localtime(&now_time_t);
-      int current_hour = local_tm->tm_hour;
+      int current_hour = local_tm->tm_hour - 1;
 
-      _wind = input.at("wind").at(current_hour).get<double>() * 3.6;
-      double next_wind = input.at("wind").at(++current_hour).get<double>() * 3.6;
+      auto winds = input.at("wind");
+
+      _wind = winds.at(current_hour).get<double>();
+      _wind = _wind * 3.6;
+      double next_wind = winds.at(++current_hour).get<double>();
+      next_wind = next_wind * 3.6;
 
       _next_p_mean = (3.46 * pow(_wind, 3) + 3.46 * pow(next_wind, 3)) / 2; 
 
@@ -148,7 +155,10 @@ public:
 
     // This sets the agent_id field in the output json object, only when it is
     // not empty
+
     if (!_agent_id.empty()) out["agent_id"] = _agent_id;
+
+    cout << __LINE__ << endl;
     return return_type::success;
   }
   
@@ -186,12 +196,13 @@ private:
   double _input_power = 0.0;
   double _output_power = 0.0;
   double _covariance = 0.01;
-  Negotiator _negotiator;
-  WindEKF _ekf;
+  Negotiator _negotiator = Negotiator(0.01, 0.0);
+  WindEKF _ekf = WindEKF(50, 3.46, 4);
   double _wind = 0.0;
   WeatherData _weather;
   vector <double> _power_vector;
   double _next_p_mean = 0.0;
+  
   void future_power(const json& forecast_json);
   steady_clock::time_point _last_time = steady_clock::now();
   double _time_accumulator = 0.0;
@@ -236,6 +247,8 @@ private:
       _power_vector.push_back(power);
 
     }
+
+    cout << __LINE__ << endl;
 
   }
       
