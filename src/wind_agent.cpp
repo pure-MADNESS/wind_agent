@@ -123,7 +123,7 @@ public:
       _ekf.predict(PERIOD);
 
       VectorXd z(1); 
-      z(0) = _omega + _dis(_gen);
+      z(0) = _omega;
 
       double tot_erg_w = max(0.8, _negotiator.get_ergodic_penalty() * _negotiator.get_weather_penalty());
       _ekf.update(z, tot_erg_w);
