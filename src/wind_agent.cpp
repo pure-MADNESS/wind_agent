@@ -90,9 +90,10 @@ public:
 
     _negotiator.listen(input, topic);
 
-    if(topic == "data"){
+    if(topic.rfind("omega", 0) == 0){
 
-      _omega = input.at("data");
+      _omega = input.at("output").at("omega").get<double>();
+      cout << "omega: " << _omega << endl;
     }
     
     return return_type::success;
