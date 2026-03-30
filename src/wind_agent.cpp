@@ -66,7 +66,6 @@ public:
   // return_type::error: _error is traced, skip process
   // return_type::critical: execution stops
   return_type load_data(json const &input, string topic = "", vector<unsigned char> const *blob = nullptr) override {
-    cout << __LINE__ << endl;
 
     // Do something with the input data
     
@@ -79,9 +78,9 @@ public:
       auto winds = input.at("wind");
 
       _wind = winds.at(current_hour).get<double>();
-      _wind = _wind * 3.6;
+      _wind = _wind / 3.6;
       double next_wind = winds.at(++current_hour).get<double>();
-      next_wind = next_wind * 3.6;
+      next_wind = next_wind / 3.6;
 
       _next_p_mean = (3.46 * pow(_wind, 3) + 3.46 * pow(next_wind, 3)) / 2; 
 
@@ -93,7 +92,6 @@ public:
     if(topic.rfind("omega", 0) == 0){
 
       _omega = input.at("output").at("omega").get<double>();
-      cout << "omega: " << _omega << endl;
     }
     
     return return_type::success;
@@ -131,36 +129,46 @@ public:
       _input_power = _ekf.get_state()(1);
       _covariance = _ekf.get_covariance()(1, 1);
 
-      _time_accumulator -= PERIOD;      
+      _time_accumulator -= PERIOD;
+      
+      _negotiator.set_cov(_covariance);
+      _negotiator.set_pmax(_input_power);
+
+      _negotiator.update_proposal();
+      if(_negotiator.get_stab_flag()){
+
+        _output_power = _negotiator.get_proposed_power();
+
+        // cout << "\rErogating [" << _output_power << "W] while generating [" << _input_power << "W] at omega:" << _omega << "\033[K" << endl;
+      
+      } else{
+
+        cout << "\rNegotiation in progess  \033[K" << endl;
+      }
+
+      if(_omega > -0.1 && _omega < 0.1){
+
+        _omega = 0.1;
+      }
+
+      out = _negotiator.speak();
+      out["hourly"] = _power_vector;
+      out["fmu_input"]["resisting_torque"] = _output_power / _omega;
+      out["fmu_input"]["actual_wind"] = _wind;
+
+      cout << "\rErogating [" << _output_power << "W] while generating [" << _input_power << "W] at omega:" << _omega << " with RT: " << _output_power / _omega <<"\033[K" << endl;
+
+      if (!_agent_id.empty()) out["agent_id"] = _agent_id;
+      return return_type::success;
     }   
 
-    _negotiator.set_cov(_covariance);
-    _negotiator.set_pmax(_input_power);
-
-    _negotiator.update_proposal();
-    if(_negotiator.get_stab_flag()){
-
-      _output_power = _negotiator.get_proposed_power();
-      cout << _output_power << endl;
-
-      cout << "\rErogating [" << _output_power << "W] while generating [" << _input_power << "W] \033[K" << endl;
     
-    } else{
-
-      cout << "\rNegotiation in progess  \033[K" << endl;
-    }
-    out = _negotiator.speak();
-    out["hourly"] = _power_vector;
-
     // load the data as necessary and set the fields of the json out variable
 
     // This sets the agent_id field in the output json object, only when it is
     // not empty
 
-    if (!_agent_id.empty()) out["agent_id"] = _agent_id;
-
-    cout << __LINE__ << endl;
-    return return_type::success;
+    return return_type::retry;
   }
   
   void set_params(const json &params) override {
@@ -248,8 +256,6 @@ private:
       _power_vector.push_back(power);
 
     }
-
-    cout << __LINE__ << endl;
 
   }
       
