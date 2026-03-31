@@ -153,7 +153,7 @@ public:
 
       out = _negotiator.speak();
       out["hourly"] = _power_vector;
-      out["fmu_input"]["resisting_torque"] = _output_power / _omega;
+      out["fmu_input"]["resisting_torque"] =  _input_power / _omega; // input_power because all sources output all the possible power
       out["fmu_input"]["actual_wind"] = _wind;
 
       cout << "\rErogating [" << _output_power << "W] while generating [" << _input_power << "W] at omega:" << _omega << " with RT: " << _output_power / _omega <<"\033[K" << endl;
