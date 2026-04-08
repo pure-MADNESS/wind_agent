@@ -206,7 +206,7 @@ private:
   double _output_power = 0.0;
   double _covariance = 0.01;
   Negotiator _negotiator = Negotiator(0.01, 0.0);
-  WindEKF _ekf = WindEKF(50, 3.46, 4);
+  WindEKF _ekf = WindEKF(10, 3.46, 4);
   double _wind = 0.0;
   WeatherData _weather;
   vector <double> _power_vector;
