@@ -179,7 +179,6 @@ public:
     // (e.g. agent_id, etc.)
     Filter::set_params(params);
     
-    _noise = _dis(_gen);
     //_negotiator.set_required_power(10000);
 
     // provide sensible defaults for the parameters by setting e.g.
@@ -219,9 +218,6 @@ private:
   steady_clock::time_point _last_time = steady_clock::now();
   double _time_accumulator = 0.0;
 
-  std::random_device _rd;
-  std::mt19937 _gen;
-  std::uniform_real_distribution<double> _dis;
   double _noise = 0.0;
   double _omega = 0.1;
   
