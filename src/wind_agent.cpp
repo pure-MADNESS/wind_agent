@@ -159,12 +159,7 @@ public:
       out["fmu_input"]["resisting_torque"] =  _output_power / _omega; // input_power because all sources output all the possible power
       out["fmu_input"]["actual_wind"] = _wind;
 
-      cout << endl << "WIND AGENT" << endl;
-      cout << "Erogating: " << _output_power << "W" << endl;
-      cout << "Generating: " << _input_power << "W" << endl;
-      cout << "Covariance: " << _covariance << endl;
-      
-      cout << "\033[3A" << flush;
+      cout << "\rErogating [" << _output_power << "W] while generating [" << _input_power << "W] at omega:" << "\t cov: " << _covariance << "\033[K" << endl;
 
       if (!_agent_id.empty()) out["agent_id"] = _agent_id;
       return return_type::success;
