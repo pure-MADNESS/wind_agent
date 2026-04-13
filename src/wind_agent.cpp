@@ -115,6 +115,9 @@ public:
 
     while(_time_accumulator >= PERIOD){
 
+      if(_output_power < 0){
+        _output_power = -_output_power;
+      }
       _negotiator.set_weather_mean(_next_p_mean);
 
       _ekf.set_inputs(_wind, _output_power);
@@ -220,7 +223,7 @@ private:
   std::mt19937 _gen;
   std::uniform_real_distribution<double> _dis;
   double _noise = 0.0;
-  double _omega = 5.0;
+  double _omega = 0.1;
   
 };
 
