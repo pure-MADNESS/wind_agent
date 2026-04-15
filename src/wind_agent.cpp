@@ -130,6 +130,10 @@ public:
       _ekf.update(z, tot_erg_w);
 
       _input_power = _ekf.get_state()(1);
+      if(_input_power < 0.0){
+        _input_power = 0.0;
+      }
+
       _covariance = _ekf.get_covariance()(1, 1);
 
       _time_accumulator -= PERIOD;

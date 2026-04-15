@@ -37,8 +37,8 @@ VectorXd WindEKF::f(const VectorXd& x, double dt){
     double torque_net = (p_max / w) - (_p_actual / w);
     
     x_new(0) = w + (torque_net / _J) * dt;
-    x_new(1) = _kt * std::pow(_v_wind, 3); 
-
+    x_new(1) = _kt * std::pow(_v_wind, 3);
+    
     return x_new;
 }
 
