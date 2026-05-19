@@ -12,32 +12,32 @@
 #include "windekf.hpp"
 
 WindEKF::WindEKF(double J, double kt, int pairs) 
-    : EKF(2, 1), _J(J), _kt(kt), _p_pairs(static_cast<double>(pairs)){
+    : EKF(2, 2), _J(J), _kt(kt), _p_pairs(static_cast<double>(pairs)){
 
     Q.resize(2, 2);
-    R.resize(1, 1);
+    R.resize(2, 2);
 
     Q << 0.01, 0, 
             0, 1.0; 
 
-    R << 0.01; 
+    R << 0.01, 0,
+        0,     0.1; 
 }
 
-void WindEKF::set_inputs(double v_wind_api, double p_now){
-    _v_wind = v_wind_api;
+void WindEKF::set_inputs(double p_now){
     _p_actual = p_now;
 }
 
 VectorXd WindEKF::f(const VectorXd& x, double dt){
     VectorXd x_new(2);
     double w = std::max(x(0), 0.1); 
-    double p_max = x(1);
+    double p_max = std::max(x(1), 0.1);
 
     // dw = (Tau_net / J) * dt -> Tau = P / omega
     double torque_net = (p_max / w) - (_p_actual / w);
     
     x_new(0) = w + (torque_net / _J) * dt;
-    x_new(1) = _kt * std::pow(_v_wind, 3);
+    x_new(1) = p_max; // constant
     
     return x_new;
 }
@@ -57,14 +57,22 @@ MatrixXd WindEKF::F(const VectorXd& x, double dt){
 }
 
 VectorXd WindEKF::h(const VectorXd& x_pred){
-    VectorXd z_pred(1);
+    VectorXd z_pred(2);
+    double p_max = std::max(x_pred(1), 0.1);
+
     // freq = (omega * p_pairs) / 2pi
     z_pred(0) = (x_pred(0) * _p_pairs) / (2.0 * M_PI);
+    z_pred(1) = std::cbrt(p_max / _kt);
     return z_pred;
 }
 
 MatrixXd WindEKF::H(const VectorXd& x){
-    MatrixXd Hj(1, 2);
-    Hj << (_p_pairs / (2.0 * M_PI)), 0;
+    MatrixXd Hj(2, 2);
+    double p_max = std::max(x(1), 0.1);
+    double dv_dp = 1.0 / (3.0 * _kt * pow(p_max / _kt, 2.0 / 3.0));
+
+    Hj << (_p_pairs / (2.0 * M_PI)), 0.0,
+            0.0, dv_dp;
+    
     return Hj;
 }

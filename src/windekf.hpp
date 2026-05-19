@@ -29,14 +29,13 @@ class WindEKF : public EKF {
          */
         WindEKF(double J, double kt, int pairs);
 
-        void set_inputs(double v_wind_api, double p_now);
+        void set_inputs(double p_now);
 
         /**         
          * Prediction:                  
          * J * dw/dt = Tau_wind - Tau_load                      
          */
         Eigen::VectorXd f(const Eigen::VectorXd& x, double dt) override;
-
 
         Eigen::MatrixXd F(const Eigen::VectorXd& x, double dt) override;
 
@@ -48,7 +47,6 @@ class WindEKF : public EKF {
         double _J;          // [kg*m^2]
         double _kt;         // fixed
         double _p_pairs;
-        double _v_wind;     // [m/s]
         double _p_actual;   // [W]
 };
 
