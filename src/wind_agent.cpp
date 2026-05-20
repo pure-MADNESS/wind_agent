@@ -127,7 +127,7 @@ public:
       z(0) = _omega;
       z(1) = _wind;
 
-      double tot_erg_w = max(1.0, _negotiator.get_ergodic_penalty() * _negotiator.get_weather_penalty());
+      double tot_erg_w = max(1.0, _negotiator.get_history_penalty() * _negotiator.get_weather_penalty());
       VectorXd vec_erg_w(2);
       vec_erg_w << 1.0, tot_erg_w;
 
